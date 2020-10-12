@@ -2,9 +2,16 @@
   "name": "filename-guard",
   "version": "1.0.0",
   "description": "A filename linter with highly customizable features.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/index.d.ts",
   "scripts": {
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "build": "rollup -c",
+    "watch": "rollup -cw"
   },
   "husky": {
     "hooks": {
@@ -49,6 +56,8 @@
     "husky": "^4.3.0",
     "lint-staged": "^10.4.0",
     "prettier": "^2.1.2",
+    "rollup": "^2.29.0",
+    "rollup-plugin-typescript2": "^0.27.3",
     "typescript": "^4.0.3"
   }
 }
