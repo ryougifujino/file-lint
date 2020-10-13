@@ -1,1 +1,3 @@
-export const greet = () => console.log('Hello, world!')
+import { isMacroCase } from '@/nameChecker'
+
+console.log(isMacroCase('FOO_BAR'))
