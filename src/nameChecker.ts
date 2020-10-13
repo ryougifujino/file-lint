@@ -1,5 +1,5 @@
 const camelCase = /^[a-z][a-z0-9]*([A-Z][a-z0-9]*)*$/
-const pascalCase = /^([A-Z][a-z0-9]*)*$/
+const pascalCase = /^([A-Z][a-z0-9]*)+$/
 const snakeCase = /^[a-z][a-z0-9]*(_[a-z0-9]+)*$/
 const macroCase = /^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$/
 const kebabCase = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
