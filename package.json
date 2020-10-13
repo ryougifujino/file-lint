@@ -1,7 +1,7 @@
 {
-  "name": "filename-guard",
-  "version": "1.0.0",
-  "description": "A filename linter with highly customizable features.",
+  "name": "ok-file-lint",
+  "version": "0.0.1",
+  "description": "A file lint with highly customizable features.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "files": [
@@ -29,19 +29,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ryougifujino/filename-guard.git"
+    "url": "git+https://github.com/ryougifujino/ok-file-lint.git"
   },
   "keywords": [
+    "ok-file-lint",
+    "ok-file",
     "lint",
-    "linter",
-    "filename"
+    "linter"
   ],
   "author": "ryougifujino",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ryougifujino/filename-guard/issues"
+    "url": "https://github.com/ryougifujino/ok-file-lint/issues"
   },
-  "homepage": "https://github.com/ryougifujino/filename-guard#readme",
+  "homepage": "https://github.com/ryougifujino/ok-file-lint#readme",
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
