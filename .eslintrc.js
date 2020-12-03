@@ -43,14 +43,17 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': OFF,
     '@typescript-eslint/explicit-module-boundary-types': OFF,
     '@typescript-eslint/no-use-before-define': ERROR,
+    '@typescript-eslint/no-shadow': [ERROR],
 
     'lines-between-class-members': [ERROR, 'always'],
     'linebreak-style': [ERROR, 'unix'],
     quotes: [ERROR, 'single'],
     semi: [ERROR, 'never'],
+    'no-console': OFF,
     'no-unused-expressions': WARN,
     'no-use-before-define': OFF,
-    'no-console': OFF,
+    'no-restricted-syntax': OFF,
+    'no-shadow': OFF,
     'class-methods-use-this': ERROR,
   },
 }
