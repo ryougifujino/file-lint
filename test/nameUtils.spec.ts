@@ -5,8 +5,8 @@ import {
   isMacroCase,
   isPascalCase,
   isSnakeCase,
-  pruneExtension,
-} from '../src/nameChecker'
+  pruneSuffix,
+} from '../src/utils/nameUtils'
 
 const camelCaseName = 'camelCase'
 const pascalCaseName = 'PascalCase'
@@ -100,14 +100,14 @@ test('isKebabCase', () => {
   expect(isKebabCase('')).toBe(false)
 })
 
-test('pruneExtension', () => {
-  expect(pruneExtension('name')).toBe('name')
-  expect(pruneExtension('name.ext')).toBe('name')
-  expect(pruneExtension('name.ext.ext')).toBe('name.ext')
-  expect(pruneExtension('name.ext.ext', '.ext.ext')).toBe('name')
-})
-
 test('ifMatchConvention', () => {
   expect(ifMatchConvention('VName', /^V[A-Z][a-z]*$/)).toBe(true)
   expect(ifMatchConvention('VName', /^[a-z]*$/)).toBe(false)
+})
+
+test('pruneSuffix', () => {
+  expect(pruneSuffix('name')).toBe('name')
+  expect(pruneSuffix('name.ext')).toBe('name')
+  expect(pruneSuffix('name.ext.ext')).toBe('name.ext')
+  expect(pruneSuffix('name.ext.ext', '.ext.ext')).toBe('name')
 })
