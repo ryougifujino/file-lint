@@ -54,6 +54,7 @@ module.exports = {
     'no-use-before-define': OFF,
     'no-restricted-syntax': OFF,
     'no-shadow': OFF,
+    'no-plusplus': OFF,
     'class-methods-use-this': ERROR,
   },
 }

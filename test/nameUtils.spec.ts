@@ -1,12 +1,14 @@
 import {
+  getNameChecker,
   ifMatchConvention,
   isCamelCase,
   isKebabCase,
   isMacroCase,
   isPascalCase,
   isSnakeCase,
-  pruneSuffix,
+  parsePath,
 } from '../src/utils/nameUtils'
+import NC from '../src/models/namingConvention'
 
 const camelCaseName = 'camelCase'
 const pascalCaseName = 'PascalCase'
@@ -105,9 +107,153 @@ test('ifMatchConvention', () => {
   expect(ifMatchConvention('VName', /^[a-z]*$/)).toBe(false)
 })
 
-test('pruneSuffix', () => {
-  expect(pruneSuffix('name')).toBe('name')
-  expect(pruneSuffix('name.ext')).toBe('name')
-  expect(pruneSuffix('name.ext.ext')).toBe('name.ext')
-  expect(pruneSuffix('name.ext.ext', '.ext.ext')).toBe('name')
+test('getNameChecker', () => {
+  expect(getNameChecker(NC.CAMEL_CASE)).toBe(isCamelCase)
+  expect(getNameChecker(NC.PASCAL_CASE)).toBe(isPascalCase)
+  expect(getNameChecker(NC.MACRO_CASE)).toBe(isMacroCase)
+  expect(getNameChecker(NC.KEBAB_CASE)).toBe(isKebabCase)
+  expect(getNameChecker(NC.SNAKE_CASE)).toBe(isSnakeCase)
+})
+
+test('parsePath', () => {
+  expect(parsePath('f')).toStrictEqual({
+    filename: 'f',
+    name: 'f',
+    extension: '',
+  })
+  expect(parsePath('f/')).toStrictEqual({
+    filename: 'f/',
+    name: 'f',
+    extension: '/',
+  })
+  expect(parsePath('some/path/f')).toStrictEqual({
+    filename: 'f',
+    name: 'f',
+    extension: '',
+  })
+  expect(parsePath('some/path/f/')).toStrictEqual({
+    filename: 'f/',
+    name: 'f',
+    extension: '/',
+  })
+  expect(parsePath('foo')).toStrictEqual({
+    filename: 'foo',
+    name: 'foo',
+    extension: '',
+  })
+  expect(parsePath('foo.ext')).toStrictEqual({
+    filename: 'foo.ext',
+    name: 'foo',
+    extension: '.ext',
+  })
+  expect(parsePath('foo.ext.ext')).toStrictEqual({
+    filename: 'foo.ext.ext',
+    name: 'foo',
+    extension: '.ext.ext',
+  })
+  expect(parsePath('.foo')).toStrictEqual({
+    filename: '.foo',
+    name: '.foo',
+    extension: '',
+  })
+  expect(parsePath('.foo.ext')).toStrictEqual({
+    filename: '.foo.ext',
+    name: '.foo',
+    extension: '.ext',
+  })
+  expect(parsePath('.foo.ext.ext')).toStrictEqual({
+    filename: '.foo.ext.ext',
+    name: '.foo',
+    extension: '.ext.ext',
+  })
+  expect(parsePath('foo/')).toStrictEqual({
+    filename: 'foo/',
+    name: 'foo',
+    extension: '/',
+  })
+  expect(parsePath('foo.ext/')).toStrictEqual({
+    filename: 'foo.ext/',
+    name: 'foo.ext',
+    extension: '/',
+  })
+  expect(parsePath('foo.ext.ext/')).toStrictEqual({
+    filename: 'foo.ext.ext/',
+    name: 'foo.ext.ext',
+    extension: '/',
+  })
+  expect(parsePath('.foo/')).toStrictEqual({
+    filename: '.foo/',
+    name: '.foo',
+    extension: '/',
+  })
+  expect(parsePath('.foo.ext/')).toStrictEqual({
+    filename: '.foo.ext/',
+    name: '.foo.ext',
+    extension: '/',
+  })
+  expect(parsePath('.foo.ext.ext/')).toStrictEqual({
+    filename: '.foo.ext.ext/',
+    name: '.foo.ext.ext',
+    extension: '/',
+  })
+  expect(parsePath('some/path/foo')).toStrictEqual({
+    filename: 'foo',
+    name: 'foo',
+    extension: '',
+  })
+  expect(parsePath('some/path/foo.ext')).toStrictEqual({
+    filename: 'foo.ext',
+    name: 'foo',
+    extension: '.ext',
+  })
+  expect(parsePath('some/path/foo.ext.ext')).toStrictEqual({
+    filename: 'foo.ext.ext',
+    name: 'foo',
+    extension: '.ext.ext',
+  })
+  expect(parsePath('some/path/.foo')).toStrictEqual({
+    filename: '.foo',
+    name: '.foo',
+    extension: '',
+  })
+  expect(parsePath('some/path/.foo.ext')).toStrictEqual({
+    filename: '.foo.ext',
+    name: '.foo',
+    extension: '.ext',
+  })
+  expect(parsePath('some/path/.foo.ext.ext')).toStrictEqual({
+    filename: '.foo.ext.ext',
+    name: '.foo',
+    extension: '.ext.ext',
+  })
+  expect(parsePath('some/path/foo/')).toStrictEqual({
+    filename: 'foo/',
+    name: 'foo',
+    extension: '/',
+  })
+  expect(parsePath('some/path/foo.ext/')).toStrictEqual({
+    filename: 'foo.ext/',
+    name: 'foo.ext',
+    extension: '/',
+  })
+  expect(parsePath('some/path/foo.ext.ext/')).toStrictEqual({
+    filename: 'foo.ext.ext/',
+    name: 'foo.ext.ext',
+    extension: '/',
+  })
+  expect(parsePath('some/path/.foo/')).toStrictEqual({
+    filename: '.foo/',
+    name: '.foo',
+    extension: '/',
+  })
+  expect(parsePath('some/path/.foo.ext/')).toStrictEqual({
+    filename: '.foo.ext/',
+    name: '.foo.ext',
+    extension: '/',
+  })
+  expect(parsePath('some/path/.foo.ext.ext/')).toStrictEqual({
+    filename: '.foo.ext.ext/',
+    name: '.foo.ext.ext',
+    extension: '/',
+  })
 })

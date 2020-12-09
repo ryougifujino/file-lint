@@ -30,36 +30,6 @@ export function isKebabCase(name: string): boolean {
   return ifMatchConvention(name, kebabCase)
 }
 
-export function pruneSuffix(name: string, suffix?: string): string {
-  const last = name.lastIndexOf(suffix || '.')
-  return last === -1 ? name : name.substring(0, last)
-}
-
-export const makeSuffixRE = (() => {
-  const searchValue = /\./g
-  return (suffix: string): RegExp => {
-    return new RegExp(`${suffix.replace(searchValue, '\\.')}$`)
-  }
-})()
-
-export const getSuffixRE = (() => {
-  const suffixReCache = new Map<string, RegExp>()
-  return (suffix: string): RegExp => {
-    let suffixRE = suffixReCache.get(suffix)
-    if (suffixRE === undefined) {
-      suffixReCache.set(suffix, (suffixRE = makeSuffixRE(suffix)))
-    }
-    return suffixRE
-  }
-})()
-
-export function extractName(path: string, suffix: string): string {
-  const pathLast = path.length - 1
-  const slashPos = path.lastIndexOf('/', path[pathLast] === '/' ? pathLast - 1 : pathLast)
-  const start = slashPos === -1 ? 0 : slashPos + 1
-  return path.substring(start, path.length - suffix.length)
-}
-
 export type NameChecker = (name: string) => boolean
 
 export const getNameChecker = (() => {
@@ -75,3 +45,25 @@ export const getNameChecker = (() => {
     return ncCheckerMap.get(nc) as NameChecker
   }
 })()
+
+export function parsePath(path: string) {
+  const beforeFilenameStart = path.lastIndexOf('/', path.length - 2)
+  const filenameStart = beforeFilenameStart === -1 ? 0 : beforeFilenameStart + 1
+  const filename = path.substring(filenameStart)
+  let extension = ''
+  if (filename.slice(-1) === '/') {
+    extension = '/'
+  } else {
+    const extensionStart = filename.indexOf('.', 1)
+    if (extensionStart !== -1) {
+      extension = filename.substring(extensionStart)
+    }
+  }
+  const name = filename.substr(0, filename.length - extension.length)
+
+  return {
+    filename,
+    name,
+    extension,
+  }
+}
