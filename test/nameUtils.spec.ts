@@ -1,14 +1,15 @@
 import {
   getNameChecker,
-  ifMatchConvention,
   isCamelCase,
   isKebabCase,
   isMacroCase,
+  isNameLegal,
   isPascalCase,
   isSnakeCase,
+  matchesConvention,
   parsePath,
-} from '../src/utils/nameUtils'
-import NC from '../src/models/namingConvention'
+} from '@/utils/nameUtils'
+import NC from '@/models/namingConvention'
 
 const camelCaseName = 'camelCase'
 const pascalCaseName = 'PascalCase'
@@ -102,9 +103,9 @@ test('isKebabCase', () => {
   expect(isKebabCase('')).toBe(false)
 })
 
-test('ifMatchConvention', () => {
-  expect(ifMatchConvention('VName', /^V[A-Z][a-z]*$/)).toBe(true)
-  expect(ifMatchConvention('VName', /^[a-z]*$/)).toBe(false)
+test('matchesConvention', () => {
+  expect(matchesConvention('VName', /^V[A-Z][a-z]*$/)).toBe(true)
+  expect(matchesConvention('VName', /^[a-z]*$/)).toBe(false)
 })
 
 test('getNameChecker', () => {
@@ -256,4 +257,14 @@ test('parsePath', () => {
     name: '.foo.ext.ext',
     extension: '/',
   })
+})
+
+test('isNameLegal', () => {
+  expect(isNameLegal('camelCase', NC.CAMEL_CASE)).toBe(true)
+  expect(isNameLegal('PascalCase', NC.CAMEL_CASE)).toBe(false)
+  expect(isNameLegal('foo233bar', /^foo\d+bar$/)).toBe(true)
+  expect(isNameLegal('foobar', /^foo\d+bar$/)).toBe(false)
+  expect(isNameLegal('camelCase', [NC.CAMEL_CASE, /^foo\d+bar$/])).toBe(true)
+  expect(isNameLegal('foo233bar', [NC.CAMEL_CASE, /^foo\d+bar$/])).toBe(true)
+  expect(isNameLegal('PascalCase', [NC.CAMEL_CASE, /^foo\d+bar$/])).toBe(false)
 })
