@@ -56,5 +56,6 @@ module.exports = {
     'no-shadow': OFF,
     'no-plusplus': OFF,
     'class-methods-use-this': ERROR,
+    'import/prefer-default-export': OFF,
   },
 }
