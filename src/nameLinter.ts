@@ -52,27 +52,31 @@ export function checkNameLintConfig(nameLintConfig: NameLintConfig): boolean {
   return true
 }
 
-interface NameLintMaterial {
+export interface NameLintMaterial {
   pathParts: PathParts
   pattern: string
   nameRules: NameRules
 }
 
+export interface NameLintMaterialsByPath {
+  [path: string]: NameLintMaterial
+}
+
 export async function getNameLintMaterialsByPath(
   basePath: string,
   nameLintConfig: NameLintConfig,
-): Promise<Map<string, NameLintMaterial> | null> {
+): Promise<NameLintMaterialsByPath | null> {
   const { rules: rulesByPattern, overriding } = nameLintConfig
   const patterns = Object.keys(rulesByPattern)
   const pathsList = await Promise.all(patterns.map((pattern) => glob(basePath, pattern)))
 
-  const nameLintMaterialsByPath = new Map<string, NameLintMaterial>()
+  const nameLintMaterialsByPath: NameLintMaterialsByPath = {}
   let pathsIdx = 0
   for (const pattern of patterns) {
     const paths = pathsList[pathsIdx++]
     const rulesByExtension = rulesByPattern[pattern]
     for (const path of paths) {
-      const nameLintMaterial = nameLintMaterialsByPath.get(path)
+      const nameLintMaterial = nameLintMaterialsByPath[path]
       if (nameLintMaterial !== undefined) {
         console.log(`[ ${pattern} ] and [ ${nameLintMaterial.pattern} ] overlap at [ ${path} ].`)
         return null
@@ -80,11 +84,11 @@ export async function getNameLintMaterialsByPath(
       const pathParts = parsePath(path)
       const nameRules = rulesByExtension[pathParts.extension]
       if (nameRules !== undefined) {
-        nameLintMaterialsByPath.set(path, {
+        nameLintMaterialsByPath[path] = {
           pathParts,
           pattern,
           nameRules,
-        })
+        }
       }
     }
   }
@@ -94,11 +98,12 @@ export async function getNameLintMaterialsByPath(
     if (overridingNameLintMaterialsByPath === null) {
       return null
     }
-    overridingNameLintMaterialsByPath.forEach((overridingNameLintMaterial, overridingPath) => {
-      if (nameLintMaterialsByPath.get(overridingPath)) {
-        nameLintMaterialsByPath.set(overridingPath, overridingNameLintMaterial)
+
+    for (const [overridingPath, overridingNameLintMaterial] of Object.entries(overridingNameLintMaterialsByPath)) {
+      if (nameLintMaterialsByPath[overridingPath]) {
+        nameLintMaterialsByPath[overridingPath] = overridingNameLintMaterial
       }
-    })
+    }
   }
 
   return nameLintMaterialsByPath
@@ -113,7 +118,7 @@ export default async function lint(basePath: string, nameLintConfig: NameLintCon
     return false
   }
   let hasLintPassed = true
-  for (const [, nameLintMaterial] of nameLintMaterialsByPath) {
+  for (const nameLintMaterial of Object.values(nameLintMaterialsByPath)) {
     const {
       pattern,
       pathParts: { filename, name },
