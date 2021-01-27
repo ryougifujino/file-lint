@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import NC from '@/models/namingConvention'
-import { checkNameLintConfig, isNameRules, getNameLintMaterialsByPath, NameLintMaterialsByPath } from '@/nameLinter'
+import lint, {
+  checkNameLintConfig,
+  isNameRules,
+  getNameLintMaterialsByPath,
+  NameLintMaterialsByPath,
+} from '@/nameLinter'
 import { resolve } from 'path'
 
 const resolveTestFileTree = (relativePath: string) => resolve(__dirname, 'file-tree-cases', relativePath)
+const case1BasePath = resolveTestFileTree('case1')
+const case2BasePath = resolveTestFileTree('case2')
 
 test('isNameRules', () => {
   expect(isNameRules(/Foo/)).toBe(true)
@@ -170,8 +177,6 @@ describe('checkNameLintConfig', () => {
 })
 
 describe('getNameLintMaterialsByPath', () => {
-  const case1BasePath = resolveTestFileTree('case1')
-
   test('rules overlap', async () => {
     expect(
       await getNameLintMaterialsByPath(case1BasePath, {
@@ -196,6 +201,9 @@ describe('getNameLintMaterialsByPath', () => {
           },
           'src/pages/user/login/components/**': {
             '.tsx': NC.PASCAL_CASE,
+          },
+          '*': {
+            '.js': NC.SNAKE_CASE,
           },
         },
       }),
@@ -226,6 +234,15 @@ describe('getNameLintMaterialsByPath', () => {
         },
         pattern: 'src/pages/user/login/components/**',
         nameRules: NC.PASCAL_CASE,
+      },
+      'config.js': {
+        pathParts: {
+          filename: 'config.js',
+          name: 'config',
+          extension: '.js',
+        },
+        pattern: '*',
+        nameRules: NC.SNAKE_CASE,
       },
     })
   })
@@ -538,5 +555,71 @@ describe('getNameLintMaterialsByPath', () => {
         nameRules: NC.PASCAL_CASE,
       },
     })
+  })
+})
+
+describe('lint', () => {
+  test('wrong format of nameLintConfig', async () => {
+    // @ts-ignore
+    expect(await lint(case1BasePath, {})).toBe(false)
+  })
+
+  test('rules overlap', async () => {
+    expect(
+      await lint(case1BasePath, {
+        rules: {
+          'src/components/**': {
+            '.tsx': NC.PASCAL_CASE,
+          },
+          'src/**/components/**': {
+            '.tsx': NC.PASCAL_CASE,
+          },
+        },
+      }),
+    ).toBe(false)
+  })
+
+  test('all filenames are ok', async () => {
+    expect(
+      await lint(case1BasePath, {
+        rules: {
+          'src/**/components/**': {
+            '.tsx': [NC.PASCAL_CASE, /index/],
+          },
+          'src/*': {
+            '.js': NC.SNAKE_CASE,
+          },
+        },
+        overriding: {
+          rules: {
+            'src/pages/**/components/**': {
+              '.tsx': NC.PASCAL_CASE,
+            },
+          },
+        },
+      }),
+    ).toBe(true)
+  })
+
+  test('not all filenames are ok', async () => {
+    expect(
+      await lint(case2BasePath, {
+        rules: {
+          'src/**/components/**': {
+            '.tsx': [NC.PASCAL_CASE, /index/],
+          },
+          '*': {
+            '.js': NC.SNAKE_CASE,
+          },
+        },
+        overriding: {
+          rules: {
+            'src/pages/**/components/**': {
+              '.tsx': NC.PASCAL_CASE,
+            },
+          },
+        },
+      }),
+    ).toBe(false)
   })
 })
