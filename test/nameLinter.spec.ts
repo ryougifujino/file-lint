@@ -192,6 +192,28 @@ describe('getNameLintMaterialsByPath', () => {
     ).toBe(null)
   })
 
+  test('overriding rules overlap', async () => {
+    expect(
+      await getNameLintMaterialsByPath(case1BasePath, {
+        rules: {
+          'src/**': {
+            '.tsx': NC.PASCAL_CASE,
+          },
+        },
+        overriding: {
+          rules: {
+            'src/components/**': {
+              '.tsx': NC.PASCAL_CASE,
+            },
+            'src/**/components/**': {
+              '.tsx': NC.PASCAL_CASE,
+            },
+          },
+        },
+      }),
+    ).toBe(null)
+  })
+
   test('rules does not overlap(without overriding rules)', async () => {
     expect(
       await getNameLintMaterialsByPath(case1BasePath, {
