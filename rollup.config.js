@@ -1,4 +1,6 @@
 import typescript from 'rollup-plugin-typescript2'
+import ttypescript from 'ttypescript'
+// eslint-disable-next-line import/extensions
 import pkg from './package.json'
 
 export default {
@@ -13,13 +15,20 @@ export default {
       format: 'es',
     },
   ],
-  external: [
-    ...Object.keys(pkg.dependencies || {}),
-    ...Object.keys(pkg.peerDependencies || {}),
-  ],
+  external: [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.peerDependencies || {})],
   plugins: [
     typescript({
-      typescript: require('typescript'),
+      typescript: ttypescript,
+      tsconfigDefaults: {
+        compilerOptions: {
+          plugins: [
+            {
+              transform: 'typescript-transform-paths',
+              afterDeclarations: true,
+            },
+          ],
+        },
+      },
     }),
   ],
 }
