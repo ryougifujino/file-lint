@@ -1,3 +1,1 @@
-import { isMacroCase } from '@/utils/nameUtils'
-
-console.log(isMacroCase('FOO_BAR'))
+export { default as lint } from '@/nameLinter'

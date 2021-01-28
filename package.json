@@ -1,6 +1,6 @@
 {
   "name": "ok-file-lint",
-  "version": "0.0.1",
+  "version": "0.8.0",
   "description": "A file lint with highly customizable features.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
