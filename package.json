@@ -1,6 +1,6 @@
 {
   "name": "ok-file-lint",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "A file lint with highly customizable features.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -12,6 +12,9 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "build": "rimraf dist && rollup -c",
     "watch": "rollup -cw"
+  },
+  "bin": {
+    "okfilelint": "./bin/cli.js"
   },
   "husky": {
     "hooks": {
