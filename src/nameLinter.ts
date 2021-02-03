@@ -33,7 +33,7 @@ export function checkNameLintConfig(nameLintConfig: NameLintConfig): boolean {
   for (const pattern of patterns) {
     const rulesByExtension = rulesByPattern[pattern]
     if (!isObject(rulesByExtension)) {
-      console.log(`The rulesByExtension${safePrint(rulesByExtension)} should be an object.`)
+      console.log(`The rulesByExtension(${safePrint(rulesByExtension)}) should be an object.`)
       return false
     }
     const extensions = Object.keys(rulesByExtension)
