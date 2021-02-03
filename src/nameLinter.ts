@@ -118,14 +118,14 @@ export default async function lint(basePath: string, nameLintConfig: NameLintCon
     return false
   }
   let hasLintPassed = true
-  for (const nameLintMaterial of Object.values(nameLintMaterialsByPath)) {
+  for (const [path, nameLintMaterial] of Object.entries(nameLintMaterialsByPath)) {
     const {
       pattern,
       pathParts: { filename, name },
       nameRules,
     } = nameLintMaterial
     if (!isNameLegal(name, nameRules)) {
-      console.log(`[ ${filename} ] does not match [ ${nameRules} ] at [ ${pattern} ]`)
+      console.log(`[ ${filename} ] does not match [ ${nameRules} ] at [ ${pattern} ] (path: ${path})`)
       hasLintPassed = false
     }
   }
