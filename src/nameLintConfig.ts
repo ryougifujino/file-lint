@@ -1,4 +1,4 @@
-import NC from '@/models/namingConvention'
+import { NC } from '@/nameValidators'
 
 export type NameRule = NC | RegExp
 
@@ -12,9 +12,7 @@ export interface RulesByPattern {
   [pattern: string]: RulesByExtension
 }
 
-interface NameLintConfig {
+export default interface NameLintConfig {
   rules: RulesByPattern
   overriding?: NameLintConfig
 }
-
-export default NameLintConfig

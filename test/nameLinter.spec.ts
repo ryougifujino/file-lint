@@ -1,178 +1,152 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import NC from '@/models/namingConvention'
-import lint, {
-  checkNameLintConfig,
-  isNameRules,
-  getNameLintMaterialsByPath,
-  NameLintMaterialsByPath,
-} from '@/nameLinter'
+import lint, { getNameLintMaterialsByPath, NameLintMaterialsByPath, parsePath } from '@/nameLinter'
+import { NC } from '@/nameValidators'
 import { resolve } from 'path'
 
 const resolveTestFileTree = (relativePath: string) => resolve(__dirname, 'file-tree-cases', relativePath)
 const case1BasePath = resolveTestFileTree('case1')
 const case2BasePath = resolveTestFileTree('case2')
 
-test('isNameRules', () => {
-  expect(isNameRules(/Foo/)).toBe(true)
-  expect(isNameRules(NC.CAMEL_CASE)).toBe(true)
-
-  const falseNameRuleCases = [123, true, null, undefined, {}, () => 0, Symbol('symbol')]
-
-  falseNameRuleCases.forEach((falseNameRule) => {
-    // @ts-ignore
-    expect(isNameRules(falseNameRule)).toBe(false)
+test('parsePath', () => {
+  expect(parsePath('f')).toStrictEqual({
+    filename: 'f',
+    name: 'f',
+    extension: '',
   })
-
-  expect(isNameRules([])).toBe(false)
-  falseNameRuleCases.forEach((falseNameRule) => {
-    // @ts-ignore
-    expect(isNameRules([falseNameRule])).toBe(false)
-    // @ts-ignore
-    expect(isNameRules([falseNameRule, /Foo/])).toBe(false)
-    // @ts-ignore
-    expect(isNameRules([falseNameRule, NC.CAMEL_CASE])).toBe(false)
+  expect(parsePath('f/')).toStrictEqual({
+    filename: 'f/',
+    name: 'f',
+    extension: '/',
   })
-
-  expect(isNameRules([/Foo/])).toBe(true)
-  expect(isNameRules([NC.CAMEL_CASE])).toBe(true)
-  expect(isNameRules([/Foo/, NC.CAMEL_CASE])).toBe(true)
-})
-
-describe('checkNameLintConfig', () => {
-  const nonObjValueCases = [123, '', true, null, undefined, [], () => 0, Symbol('symbol')]
-
-  test('test the false types of nameLintConfig', () => {
-    // @ts-ignore
-    expect(checkNameLintConfig({})).toBe(false)
-    nonObjValueCases.forEach((nonObjValue) => {
-      // @ts-ignore
-      expect(checkNameLintConfig(nonObjValue)).toBe(false)
-    })
+  expect(parsePath('some/path/f')).toStrictEqual({
+    filename: 'f',
+    name: 'f',
+    extension: '',
   })
-
-  test('test the false types of rulesByPattern(rules)', () => {
-    // @ts-ignore
-    nonObjValueCases.forEach((nonObjValue) => {
-      expect(
-        checkNameLintConfig({
-          // @ts-ignore
-          rules: nonObjValue,
-        }),
-      ).toBe(false)
-    })
+  expect(parsePath('some/path/f/')).toStrictEqual({
+    filename: 'f/',
+    name: 'f',
+    extension: '/',
   })
-
-  test('test the false types of rulesByExtension', () => {
-    nonObjValueCases.forEach((nonObjValue) => {
-      expect(
-        checkNameLintConfig({
-          rules: {
-            // @ts-ignore
-            'src/pattern/**': nonObjValue,
-          },
-        }),
-      ).toBe(false)
-    })
+  expect(parsePath('foo')).toStrictEqual({
+    filename: 'foo',
+    name: 'foo',
+    extension: '',
   })
-
-  test('test the false types of nameRules', () => {
-    const nameRuleOfFalseTypeCases = [123, '', true, null, undefined, {}, () => 0, Symbol('symbol')]
-
-    nameRuleOfFalseTypeCases.forEach((nameRuleOfFalseType) => {
-      expect(
-        checkNameLintConfig({
-          rules: {
-            'src/pattern/**': {
-              // @ts-ignore
-              '.ts': nameRuleOfFalseType,
-            },
-          },
-        }),
-      ).toBe(false)
-      expect(
-        checkNameLintConfig({
-          rules: {
-            'src/pattern/**': {
-              // @ts-ignore
-              '.ts': [nameRuleOfFalseType],
-            },
-          },
-        }),
-      ).toBe(false)
-    })
-    expect(
-      checkNameLintConfig({
-        rules: {
-          'src/pattern/**': {
-            '.ts': [],
-          },
-        },
-      }),
-    ).toBe(false)
+  expect(parsePath('foo.ext')).toStrictEqual({
+    filename: 'foo.ext',
+    name: 'foo',
+    extension: '.ext',
   })
-
-  test('test the false types of overriding', () => {
-    nonObjValueCases
-      .filter((value) => value !== undefined)
-      .forEach((nonObjUndefValue) => {
-        expect(
-          checkNameLintConfig({
-            rules: {},
-            // @ts-ignore
-            overriding: nonObjUndefValue,
-          }),
-        ).toBe(false)
-      })
+  expect(parsePath('foo.ext.ext')).toStrictEqual({
+    filename: 'foo.ext.ext',
+    name: 'foo',
+    extension: '.ext.ext',
   })
-
-  test('test the true structures of nameLintConfig', () => {
-    expect(
-      checkNameLintConfig({
-        rules: {},
-      }),
-    ).toBe(true)
-    expect(
-      checkNameLintConfig({
-        rules: {
-          'src/pattern/**': {},
-        },
-      }),
-    ).toBe(true)
-    expect(
-      checkNameLintConfig({
-        rules: {
-          'src/pattern/**': {
-            '.ts': NC.CAMEL_CASE,
-          },
-        },
-      }),
-    ).toBe(true)
-    expect(
-      checkNameLintConfig({
-        rules: {
-          'src/pattern/**': {
-            '.ts': NC.CAMEL_CASE,
-          },
-        },
-        overriding: {
-          rules: {},
-        },
-      }),
-    ).toBe(true)
-    expect(
-      checkNameLintConfig({
-        rules: {
-          'src/pattern/**': {
-            '.ts': NC.CAMEL_CASE,
-            '.d.ts': [NC.CAMEL_CASE, /RegExp/],
-          },
-          'src/fun-facts/**': {},
-        },
-        overriding: {
-          rules: {},
-        },
-      }),
-    ).toBe(true)
+  expect(parsePath('.foo')).toStrictEqual({
+    filename: '.foo',
+    name: '.foo',
+    extension: '',
+  })
+  expect(parsePath('.foo.ext')).toStrictEqual({
+    filename: '.foo.ext',
+    name: '.foo',
+    extension: '.ext',
+  })
+  expect(parsePath('.foo.ext.ext')).toStrictEqual({
+    filename: '.foo.ext.ext',
+    name: '.foo',
+    extension: '.ext.ext',
+  })
+  expect(parsePath('foo/')).toStrictEqual({
+    filename: 'foo/',
+    name: 'foo',
+    extension: '/',
+  })
+  expect(parsePath('foo.ext/')).toStrictEqual({
+    filename: 'foo.ext/',
+    name: 'foo.ext',
+    extension: '/',
+  })
+  expect(parsePath('foo.ext.ext/')).toStrictEqual({
+    filename: 'foo.ext.ext/',
+    name: 'foo.ext.ext',
+    extension: '/',
+  })
+  expect(parsePath('.foo/')).toStrictEqual({
+    filename: '.foo/',
+    name: '.foo',
+    extension: '/',
+  })
+  expect(parsePath('.foo.ext/')).toStrictEqual({
+    filename: '.foo.ext/',
+    name: '.foo.ext',
+    extension: '/',
+  })
+  expect(parsePath('.foo.ext.ext/')).toStrictEqual({
+    filename: '.foo.ext.ext/',
+    name: '.foo.ext.ext',
+    extension: '/',
+  })
+  expect(parsePath('some/path/foo')).toStrictEqual({
+    filename: 'foo',
+    name: 'foo',
+    extension: '',
+  })
+  expect(parsePath('some/path/foo.ext')).toStrictEqual({
+    filename: 'foo.ext',
+    name: 'foo',
+    extension: '.ext',
+  })
+  expect(parsePath('some/path/foo.ext.ext')).toStrictEqual({
+    filename: 'foo.ext.ext',
+    name: 'foo',
+    extension: '.ext.ext',
+  })
+  expect(parsePath('some/path/.foo')).toStrictEqual({
+    filename: '.foo',
+    name: '.foo',
+    extension: '',
+  })
+  expect(parsePath('some/path/.foo.ext')).toStrictEqual({
+    filename: '.foo.ext',
+    name: '.foo',
+    extension: '.ext',
+  })
+  expect(parsePath('some/path/.foo.ext.ext')).toStrictEqual({
+    filename: '.foo.ext.ext',
+    name: '.foo',
+    extension: '.ext.ext',
+  })
+  expect(parsePath('some/path/foo/')).toStrictEqual({
+    filename: 'foo/',
+    name: 'foo',
+    extension: '/',
+  })
+  expect(parsePath('some/path/foo.ext/')).toStrictEqual({
+    filename: 'foo.ext/',
+    name: 'foo.ext',
+    extension: '/',
+  })
+  expect(parsePath('some/path/foo.ext.ext/')).toStrictEqual({
+    filename: 'foo.ext.ext/',
+    name: 'foo.ext.ext',
+    extension: '/',
+  })
+  expect(parsePath('some/path/.foo/')).toStrictEqual({
+    filename: '.foo/',
+    name: '.foo',
+    extension: '/',
+  })
+  expect(parsePath('some/path/.foo.ext/')).toStrictEqual({
+    filename: '.foo.ext/',
+    name: '.foo.ext',
+    extension: '/',
+  })
+  expect(parsePath('some/path/.foo.ext.ext/')).toStrictEqual({
+    filename: '.foo.ext.ext/',
+    name: '.foo.ext.ext',
+    extension: '/',
   })
 })
 
