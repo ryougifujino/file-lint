@@ -1,5 +1,5 @@
 import {
-  getNameNameValidator,
+  getNameValidator,
   isCamelCase,
   isKebabCase,
   isMacroCase,
@@ -107,12 +107,12 @@ test('matchesConvention', () => {
   expect(matchesConvention('VName', /^[a-z]*$/)).toBe(false)
 })
 
-test('getNameNameValidator', () => {
-  expect(getNameNameValidator(NC.CAMEL_CASE)).toBe(isCamelCase)
-  expect(getNameNameValidator(NC.PASCAL_CASE)).toBe(isPascalCase)
-  expect(getNameNameValidator(NC.MACRO_CASE)).toBe(isMacroCase)
-  expect(getNameNameValidator(NC.KEBAB_CASE)).toBe(isKebabCase)
-  expect(getNameNameValidator(NC.SNAKE_CASE)).toBe(isSnakeCase)
+test('getNameValidator', () => {
+  expect(getNameValidator(NC.CAMEL_CASE)).toBe(isCamelCase)
+  expect(getNameValidator(NC.PASCAL_CASE)).toBe(isPascalCase)
+  expect(getNameValidator(NC.MACRO_CASE)).toBe(isMacroCase)
+  expect(getNameValidator(NC.KEBAB_CASE)).toBe(isKebabCase)
+  expect(getNameValidator(NC.SNAKE_CASE)).toBe(isSnakeCase)
 })
 
 test('isNameLegal', () => {

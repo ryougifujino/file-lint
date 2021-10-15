@@ -40,7 +40,7 @@ export function isKebabCase(name: string): boolean {
 
 export type NameValidator = (name: string) => boolean
 
-export const getNameNameValidator = (() => {
+export const getNameValidator = (() => {
   const validatorsByNC = new Map<NC, NameValidator>([
     [NC.CAMEL_CASE, isCamelCase],
     [NC.PASCAL_CASE, isPascalCase],
@@ -59,7 +59,7 @@ export const isNameLegal = (() => {
     if (nameRule instanceof RegExp) {
       return nameRule.test(name)
     }
-    return getNameNameValidator(nameRule)(name)
+    return getNameValidator(nameRule)(name)
   }
 
   return (name: string, nameRules: NameRules): boolean => {
