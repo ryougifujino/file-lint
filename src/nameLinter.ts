@@ -1,4 +1,5 @@
 import glob from '@/utils/glob'
+import { highlight, printError } from '@/utils/print'
 import NameLintConfig, { NameRules } from '@/nameLintConfig'
 import { isNameLegal } from '@/nameValidators'
 import { validateNameLintConfig } from '@/validateNameLintConfig'
@@ -57,7 +58,7 @@ export async function getNameLintMaterialsByPath(
     for (const path of paths) {
       const nameLintMaterial = nameLintMaterialsByPath[path]
       if (nameLintMaterial !== undefined) {
-        console.log(`[ ${pattern} ] and [ ${nameLintMaterial.pattern} ] overlap at [ ${path} ].`)
+        printError(`${highlight(pattern)} and ${highlight(nameLintMaterial.pattern)} overlap at ${highlight(path)}.`)
         return null
       }
       const pathParts = parsePath(path)
@@ -104,7 +105,9 @@ export default async function lint(basePath: string, nameLintConfig: NameLintCon
       nameRules,
     } = nameLintMaterial
     if (!isNameLegal(name, nameRules)) {
-      console.log(`[ ${filename} ] does not match [ ${nameRules} ] at [ ${pattern} ] (path: ${path})`)
+      printError(
+        `${highlight(filename)} does not match ${highlight(nameRules)} at ${highlight(pattern)} (path: ${path}).`,
+      )
       hasLintPassed = false
     }
   }

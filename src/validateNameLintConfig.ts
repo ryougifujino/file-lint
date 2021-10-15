@@ -1,5 +1,6 @@
+import { highlight, printError } from '@/utils/print'
 import NameLintConfig, { NameRule, NameRules } from '@/nameLintConfig'
-import { isObject, toPrintable } from '@/utils/shared'
+import { isObject } from '@/utils/shared'
 import { NC } from '@/nameValidators'
 
 export const isNameRules = (() => {
@@ -18,26 +19,30 @@ export const isNameRules = (() => {
 
 export function validateNameLintConfig(nameLintConfig: NameLintConfig): boolean {
   if (!isObject(nameLintConfig)) {
-    console.log(`The nameLintConfig(${toPrintable(nameLintConfig)}) should be an object.`)
+    printError(`The nameLintConfig ${highlight(nameLintConfig)} should be an object.`)
     return false
   }
   const { rules: rulesByPattern, overriding } = nameLintConfig
   if (!isObject(rulesByPattern)) {
-    console.log(`The rules(${toPrintable(rulesByPattern)}) should be an object.`)
+    printError(`The rules ${highlight(rulesByPattern)} should be an object.`)
     return false
   }
   const patterns = Object.keys(rulesByPattern)
   for (const pattern of patterns) {
     const rulesByExtension = rulesByPattern[pattern]
     if (!isObject(rulesByExtension)) {
-      console.log(`The rulesByExtension(${toPrintable(rulesByExtension)}) should be an object.`)
+      printError(`The rulesByExtension ${highlight(rulesByExtension)} should be an object.`)
       return false
     }
     const extensions = Object.keys(rulesByExtension)
     for (const extension of extensions) {
       const nameRules = rulesByExtension[extension]
       if (!isNameRules(nameRules)) {
-        console.log(`The nameRule(s)(${toPrintable(nameRules)}) should be a(an array(length >= 1) of) RegExp or NC`)
+        printError(
+          `The nameRule/nameRules ${highlight(
+            nameRules,
+          )} should be a RegExp or NC/an array(length >= 1) of RegExp or NC.`,
+        )
         return false
       }
     }
