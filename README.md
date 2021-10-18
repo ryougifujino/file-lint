@@ -16,10 +16,10 @@ npm i -D ok-file-lint
 
 ## Glossary
 
-|   Term   | Definition                                        |
-| :------: | ------------------------------------------------- |
-| Filename | Filenames without extensions.                     |
-|   Name   | The part of the filename excluding the extension. |
+|   Term   | Definition                                     |
+| :------: | ---------------------------------------------- |
+| Filename | The full names of files, including extensions. |
+|   Name   | The part of Filename excluding the extension.  |
 
 ## License
 
