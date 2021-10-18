@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import lint, { getNameLintMaterialsByPath, NameLintMaterialsByPath, parsePath } from '@/nameLinter'
+import lintNames, { getNameLintFuelsByPath, NameLintFuelsByPath, parsePath, SmartFilename } from '@/nameLinter'
 import { NC } from '@/nameValidators'
 import { resolve } from 'path'
 
@@ -8,152 +8,280 @@ const case1BasePath = resolveTestFileTree('case1')
 const case2BasePath = resolveTestFileTree('case2')
 
 test('parsePath', () => {
-  expect(parsePath('f')).toStrictEqual({
+  expect(parsePath('f')).toStrictEqual<SmartFilename>({
     filename: 'f',
-    name: 'f',
-    extension: '',
+    nameExtensionCandidates: [
+      {
+        name: 'f',
+        extension: '',
+      },
+    ],
   })
-  expect(parsePath('f/')).toStrictEqual({
+  expect(parsePath('f/')).toStrictEqual<SmartFilename>({
     filename: 'f/',
-    name: 'f',
-    extension: '/',
+    nameExtensionCandidates: [
+      {
+        name: 'f',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('some/path/f')).toStrictEqual({
+  expect(parsePath('some/path/f')).toStrictEqual<SmartFilename>({
     filename: 'f',
-    name: 'f',
-    extension: '',
+    nameExtensionCandidates: [
+      {
+        name: 'f',
+        extension: '',
+      },
+    ],
   })
-  expect(parsePath('some/path/f/')).toStrictEqual({
+  expect(parsePath('some/path/f/')).toStrictEqual<SmartFilename>({
     filename: 'f/',
-    name: 'f',
-    extension: '/',
+    nameExtensionCandidates: [
+      {
+        name: 'f',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('foo')).toStrictEqual({
+  expect(parsePath('foo')).toStrictEqual<SmartFilename>({
     filename: 'foo',
-    name: 'foo',
-    extension: '',
+    nameExtensionCandidates: [
+      {
+        name: 'foo',
+        extension: '',
+      },
+    ],
   })
-  expect(parsePath('foo.ext')).toStrictEqual({
-    filename: 'foo.ext',
-    name: 'foo',
-    extension: '.ext',
+  expect(parsePath('foo.bar')).toStrictEqual<SmartFilename>({
+    filename: 'foo.bar',
+    nameExtensionCandidates: [
+      {
+        name: 'foo',
+        extension: '.bar',
+      },
+    ],
   })
-  expect(parsePath('foo.ext.ext')).toStrictEqual({
-    filename: 'foo.ext.ext',
-    name: 'foo',
-    extension: '.ext.ext',
+  expect(parsePath('foo.bar.bar')).toStrictEqual<SmartFilename>({
+    filename: 'foo.bar.bar',
+    nameExtensionCandidates: [
+      {
+        name: 'foo',
+        extension: '.bar.bar',
+      },
+      {
+        name: 'foo.bar',
+        extension: '.bar',
+      },
+    ],
   })
-  expect(parsePath('.foo')).toStrictEqual({
+  expect(parsePath('.foo')).toStrictEqual<SmartFilename>({
     filename: '.foo',
-    name: '.foo',
-    extension: '',
+    nameExtensionCandidates: [
+      {
+        name: '.foo',
+        extension: '',
+      },
+    ],
   })
-  expect(parsePath('.foo.ext')).toStrictEqual({
-    filename: '.foo.ext',
-    name: '.foo',
-    extension: '.ext',
+  expect(parsePath('.foo.bar')).toStrictEqual<SmartFilename>({
+    filename: '.foo.bar',
+    nameExtensionCandidates: [
+      {
+        name: '.foo',
+        extension: '.bar',
+      },
+    ],
   })
-  expect(parsePath('.foo.ext.ext')).toStrictEqual({
-    filename: '.foo.ext.ext',
-    name: '.foo',
-    extension: '.ext.ext',
+  expect(parsePath('.foo.bar.bar')).toStrictEqual<SmartFilename>({
+    filename: '.foo.bar.bar',
+    nameExtensionCandidates: [
+      {
+        name: '.foo',
+        extension: '.bar.bar',
+      },
+      {
+        name: '.foo.bar',
+        extension: '.bar',
+      },
+    ],
   })
-  expect(parsePath('foo/')).toStrictEqual({
+  expect(parsePath('foo/')).toStrictEqual<SmartFilename>({
     filename: 'foo/',
-    name: 'foo',
-    extension: '/',
+    nameExtensionCandidates: [
+      {
+        name: 'foo',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('foo.ext/')).toStrictEqual({
-    filename: 'foo.ext/',
-    name: 'foo.ext',
-    extension: '/',
+  expect(parsePath('foo.bar/')).toStrictEqual<SmartFilename>({
+    filename: 'foo.bar/',
+    nameExtensionCandidates: [
+      {
+        name: 'foo.bar',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('foo.ext.ext/')).toStrictEqual({
-    filename: 'foo.ext.ext/',
-    name: 'foo.ext.ext',
-    extension: '/',
+  expect(parsePath('foo.bar.bar/')).toStrictEqual<SmartFilename>({
+    filename: 'foo.bar.bar/',
+    nameExtensionCandidates: [
+      {
+        name: 'foo.bar.bar',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('.foo/')).toStrictEqual({
+  expect(parsePath('.foo/')).toStrictEqual<SmartFilename>({
     filename: '.foo/',
-    name: '.foo',
-    extension: '/',
+    nameExtensionCandidates: [
+      {
+        name: '.foo',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('.foo.ext/')).toStrictEqual({
-    filename: '.foo.ext/',
-    name: '.foo.ext',
-    extension: '/',
+  expect(parsePath('.foo.bar/')).toStrictEqual<SmartFilename>({
+    filename: '.foo.bar/',
+    nameExtensionCandidates: [
+      {
+        name: '.foo.bar',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('.foo.ext.ext/')).toStrictEqual({
-    filename: '.foo.ext.ext/',
-    name: '.foo.ext.ext',
-    extension: '/',
+  expect(parsePath('.foo.bar.bar/')).toStrictEqual<SmartFilename>({
+    filename: '.foo.bar.bar/',
+    nameExtensionCandidates: [
+      {
+        name: '.foo.bar.bar',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('some/path/foo')).toStrictEqual({
+  expect(parsePath('some/path/foo')).toStrictEqual<SmartFilename>({
     filename: 'foo',
-    name: 'foo',
-    extension: '',
+    nameExtensionCandidates: [
+      {
+        name: 'foo',
+        extension: '',
+      },
+    ],
   })
-  expect(parsePath('some/path/foo.ext')).toStrictEqual({
-    filename: 'foo.ext',
-    name: 'foo',
-    extension: '.ext',
+  expect(parsePath('some/path/foo.bar')).toStrictEqual<SmartFilename>({
+    filename: 'foo.bar',
+    nameExtensionCandidates: [
+      {
+        name: 'foo',
+        extension: '.bar',
+      },
+    ],
   })
-  expect(parsePath('some/path/foo.ext.ext')).toStrictEqual({
-    filename: 'foo.ext.ext',
-    name: 'foo',
-    extension: '.ext.ext',
+  expect(parsePath('some/path/foo.bar.bar')).toStrictEqual<SmartFilename>({
+    filename: 'foo.bar.bar',
+    nameExtensionCandidates: [
+      {
+        name: 'foo',
+        extension: '.bar.bar',
+      },
+      {
+        name: 'foo.bar',
+        extension: '.bar',
+      },
+    ],
   })
-  expect(parsePath('some/path/.foo')).toStrictEqual({
+  expect(parsePath('some/path/.foo')).toStrictEqual<SmartFilename>({
     filename: '.foo',
-    name: '.foo',
-    extension: '',
+    nameExtensionCandidates: [
+      {
+        name: '.foo',
+        extension: '',
+      },
+    ],
   })
-  expect(parsePath('some/path/.foo.ext')).toStrictEqual({
-    filename: '.foo.ext',
-    name: '.foo',
-    extension: '.ext',
+  expect(parsePath('some/path/.foo.bar')).toStrictEqual<SmartFilename>({
+    filename: '.foo.bar',
+    nameExtensionCandidates: [
+      {
+        name: '.foo',
+        extension: '.bar',
+      },
+    ],
   })
-  expect(parsePath('some/path/.foo.ext.ext')).toStrictEqual({
-    filename: '.foo.ext.ext',
-    name: '.foo',
-    extension: '.ext.ext',
+  expect(parsePath('some/path/.foo.bar.bar')).toStrictEqual<SmartFilename>({
+    filename: '.foo.bar.bar',
+    nameExtensionCandidates: [
+      {
+        name: '.foo',
+        extension: '.bar.bar',
+      },
+      {
+        name: '.foo.bar',
+        extension: '.bar',
+      },
+    ],
   })
-  expect(parsePath('some/path/foo/')).toStrictEqual({
+  expect(parsePath('some/path/foo/')).toStrictEqual<SmartFilename>({
     filename: 'foo/',
-    name: 'foo',
-    extension: '/',
+    nameExtensionCandidates: [
+      {
+        name: 'foo',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('some/path/foo.ext/')).toStrictEqual({
-    filename: 'foo.ext/',
-    name: 'foo.ext',
-    extension: '/',
+  expect(parsePath('some/path/foo.bar/')).toStrictEqual<SmartFilename>({
+    filename: 'foo.bar/',
+    nameExtensionCandidates: [
+      {
+        name: 'foo.bar',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('some/path/foo.ext.ext/')).toStrictEqual({
-    filename: 'foo.ext.ext/',
-    name: 'foo.ext.ext',
-    extension: '/',
+  expect(parsePath('some/path/foo.bar.bar/')).toStrictEqual<SmartFilename>({
+    filename: 'foo.bar.bar/',
+    nameExtensionCandidates: [
+      {
+        name: 'foo.bar.bar',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('some/path/.foo/')).toStrictEqual({
+  expect(parsePath('some/path/.foo/')).toStrictEqual<SmartFilename>({
     filename: '.foo/',
-    name: '.foo',
-    extension: '/',
+    nameExtensionCandidates: [
+      {
+        name: '.foo',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('some/path/.foo.ext/')).toStrictEqual({
-    filename: '.foo.ext/',
-    name: '.foo.ext',
-    extension: '/',
+  expect(parsePath('some/path/.foo.bar/')).toStrictEqual<SmartFilename>({
+    filename: '.foo.bar/',
+    nameExtensionCandidates: [
+      {
+        name: '.foo.bar',
+        extension: '/',
+      },
+    ],
   })
-  expect(parsePath('some/path/.foo.ext.ext/')).toStrictEqual({
-    filename: '.foo.ext.ext/',
-    name: '.foo.ext.ext',
-    extension: '/',
+  expect(parsePath('some/path/.foo.bar.bar/')).toStrictEqual<SmartFilename>({
+    filename: '.foo.bar.bar/',
+    nameExtensionCandidates: [
+      {
+        name: '.foo.bar.bar',
+        extension: '/',
+      },
+    ],
   })
 })
 
-describe('getNameLintMaterialsByPath', () => {
+describe('getNameLintFuelsByPath', () => {
   test('rules overlap', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -163,12 +291,12 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toBe(null)
+    ).toBe<NameLintFuelsByPath | null>(null)
   })
 
   test('overriding rules overlap', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -185,12 +313,12 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toBe(null)
+    ).toBe<NameLintFuelsByPath | null>(null)
   })
 
   test('rules does not overlap(without overriding rules)', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -203,49 +331,41 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toStrictEqual({
+    ).toStrictEqual<NameLintFuelsByPath | null>({
       'src/components/List/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
       'src/components/List/index.tsx': {
-        pathParts: {
-          filename: 'index.tsx',
-          name: 'index',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'index',
+        filename: 'index.tsx',
       },
       'src/pages/user/login/components/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/pages/user/login/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
       'config.js': {
-        pathParts: {
-          filename: 'config.js',
-          name: 'config',
-          extension: '.js',
-        },
         pattern: '*',
+        extension: '.js',
         nameRules: NC.SNAKE_CASE,
+        name: 'config',
+        filename: 'config.js',
       },
     })
   })
 
   test('the scope of overriding rules is larger than rules', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -262,40 +382,34 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toStrictEqual<NameLintMaterialsByPath>({
+    ).toStrictEqual<NameLintFuelsByPath | null>({
       'src/components/List/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/**/components/**',
+        extension: '.tsx',
         nameRules: NC.CAMEL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
       'src/components/List/index.tsx': {
-        pathParts: {
-          filename: 'index.tsx',
-          name: 'index',
-          extension: '.tsx',
-        },
         pattern: 'src/**/components/**',
+        extension: '.tsx',
         nameRules: NC.CAMEL_CASE,
+        name: 'index',
+        filename: 'index.tsx',
       },
       'src/pages/user/login/components/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/**/components/**',
+        extension: '.tsx',
         nameRules: NC.CAMEL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
     })
   })
 
   test('the scope of overriding rules is smaller than rules', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -312,40 +426,34 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toStrictEqual<NameLintMaterialsByPath>({
+    ).toStrictEqual<NameLintFuelsByPath | null>({
       'src/components/List/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
       'src/components/List/index.tsx': {
-        pathParts: {
-          filename: 'index.tsx',
-          name: 'index',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'index',
+        filename: 'index.tsx',
       },
       'src/pages/user/login/components/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/pages/user/login/components/**',
+        extension: '.tsx',
         nameRules: NC.CAMEL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
     })
   })
 
   test('the scope of overriding rules and rules intersect', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -362,40 +470,34 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toStrictEqual<NameLintMaterialsByPath>({
+    ).toStrictEqual<NameLintFuelsByPath | null>({
       'src/components/List/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
       'src/components/List/index.tsx': {
-        pathParts: {
-          filename: 'index.tsx',
-          name: 'index',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'index',
+        filename: 'index.tsx',
       },
       'src/pages/user/login/components/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/pages/**/components/**',
+        extension: '.tsx',
         nameRules: NC.CAMEL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
     })
   })
 
   test('overriding rules and rules do not overlap', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -412,40 +514,34 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toStrictEqual<NameLintMaterialsByPath>({
+    ).toStrictEqual<NameLintFuelsByPath | null>({
       'src/components/List/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
       'src/components/List/index.tsx': {
-        pathParts: {
-          filename: 'index.tsx',
-          name: 'index',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'index',
+        filename: 'index.tsx',
       },
       'src/pages/user/login/components/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/pages/user/login/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
     })
   })
 
   test('deep overriding rules(consecutive)', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -469,40 +565,34 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toStrictEqual<NameLintMaterialsByPath>({
+    ).toStrictEqual<NameLintFuelsByPath | null>({
       'src/components/List/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
       'src/components/List/index.tsx': {
-        pathParts: {
-          filename: 'index.tsx',
-          name: 'index',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'index',
+        filename: 'index.tsx',
       },
       'src/pages/user/login/components/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/pages/user/login/components/**',
+        extension: '.tsx',
         nameRules: NC.SNAKE_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
     })
   })
 
   test('deep overriding rules(not consecutive)', async () => {
     expect(
-      await getNameLintMaterialsByPath(case1BasePath, {
+      await getNameLintFuelsByPath(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -522,47 +612,41 @@ describe('getNameLintMaterialsByPath', () => {
           },
         },
       }),
-    ).toStrictEqual<NameLintMaterialsByPath>({
+    ).toStrictEqual<NameLintFuelsByPath | null>({
       'src/components/List/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
       'src/components/List/index.tsx': {
-        pathParts: {
-          filename: 'index.tsx',
-          name: 'index',
-          extension: '.tsx',
-        },
         pattern: 'src/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'index',
+        filename: 'index.tsx',
       },
       'src/pages/user/login/components/CircleLoading.tsx': {
-        pathParts: {
-          filename: 'CircleLoading.tsx',
-          name: 'CircleLoading',
-          extension: '.tsx',
-        },
         pattern: 'src/pages/user/login/components/**',
+        extension: '.tsx',
         nameRules: NC.PASCAL_CASE,
+        name: 'CircleLoading',
+        filename: 'CircleLoading.tsx',
       },
     })
   })
 })
 
-describe('lint', () => {
+describe('lintNames', () => {
   test('wrong format of nameLintConfig', async () => {
     // @ts-ignore
-    expect(await lint(case1BasePath, {})).toBe(false)
+    expect(await lintNames(case1BasePath, {})).toBe(false)
   })
 
   test('rules overlap', async () => {
     expect(
-      await lint(case1BasePath, {
+      await lintNames(case1BasePath, {
         rules: {
           'src/components/**': {
             '.tsx': NC.PASCAL_CASE,
@@ -577,7 +661,7 @@ describe('lint', () => {
 
   test('all filenames are ok', async () => {
     expect(
-      await lint(case1BasePath, {
+      await lintNames(case1BasePath, {
         rules: {
           'src/**/components/**': {
             '.tsx': [NC.PASCAL_CASE, /index/],
@@ -599,7 +683,7 @@ describe('lint', () => {
 
   test('not all filenames are ok', async () => {
     expect(
-      await lint(case2BasePath, {
+      await lintNames(case2BasePath, {
         rules: {
           'src/**/components/**': {
             '.tsx': [NC.PASCAL_CASE, /index/],

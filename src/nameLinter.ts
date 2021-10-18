@@ -1,112 +1,137 @@
 import glob from '@/utils/glob'
-import { highlight, printError } from '@/utils/print'
+import { highlight, printError, toPrintable } from '@/utils/print'
 import NameLintConfig, { NameRules } from '@/nameLintConfig'
 import { isNameLegal } from '@/nameValidators'
 import { validateNameLintConfig } from '@/validateNameLintConfig'
 
-export interface NameLintMaterial {
-  pathParts: PathParts
+export interface NameLintFuel {
   pattern: string
+  extension: string
   nameRules: NameRules
-}
-
-export interface NameLintMaterialsByPath {
-  [path: string]: NameLintMaterial
-}
-
-interface PathParts {
+  name: string
   filename: string
+}
+
+export interface NameLintFuelsByPath {
+  [path: string]: NameLintFuel
+}
+
+interface NameExtension {
   name: string
   extension: string
 }
 
-export function parsePath(path: string): PathParts {
+export interface SmartFilename {
+  filename: string
+  nameExtensionCandidates: Array<NameExtension>
+}
+
+export function parsePath(path: string): SmartFilename {
   const beforeFilenameStart = path.lastIndexOf('/', path.length - 2)
   const filenameStart = beforeFilenameStart === -1 ? 0 : beforeFilenameStart + 1
   const filename = path.substring(filenameStart)
-  let extension = ''
+
+  const nameExtensionCandidates: Array<NameExtension> = []
   if (filename.slice(-1) === '/') {
-    extension = '/'
+    const extension = '/'
+    nameExtensionCandidates.push({
+      name: filename.substr(0, filename.length - extension.length),
+      extension,
+    })
   } else {
-    const extensionStart = filename.indexOf('.', 1)
+    let extensionStart = filename.indexOf('.', 1)
     if (extensionStart !== -1) {
-      extension = filename.substring(extensionStart)
+      while (extensionStart !== -1) {
+        const extension = filename.substring(extensionStart)
+        nameExtensionCandidates.push({
+          name: filename.substr(0, filename.length - extension.length),
+          extension,
+        })
+        extensionStart = filename.indexOf('.', extensionStart + 1)
+      }
+    } else {
+      nameExtensionCandidates.push({
+        name: filename,
+        extension: '',
+      })
     }
   }
-  const name = filename.substr(0, filename.length - extension.length)
 
   return {
     filename,
-    name,
-    extension,
+    nameExtensionCandidates,
   }
 }
 
-export async function getNameLintMaterialsByPath(
+export async function getNameLintFuelsByPath(
   basePath: string,
   nameLintConfig: NameLintConfig,
-): Promise<NameLintMaterialsByPath | null> {
+): Promise<NameLintFuelsByPath | null> {
   const { rules: rulesByPattern, overriding } = nameLintConfig
   const patterns = Object.keys(rulesByPattern)
   const pathsList = await Promise.all(patterns.map((pattern) => glob(basePath, pattern)))
 
-  const nameLintMaterialsByPath: NameLintMaterialsByPath = {}
+  const nameLintFuelsByPath: NameLintFuelsByPath = {}
   let pathsIdx = 0
   for (const pattern of patterns) {
     const paths = pathsList[pathsIdx++]
     const rulesByExtension = rulesByPattern[pattern]
     for (const path of paths) {
-      const nameLintMaterial = nameLintMaterialsByPath[path]
-      if (nameLintMaterial !== undefined) {
-        printError(`${highlight(pattern)} and ${highlight(nameLintMaterial.pattern)} overlap at ${highlight(path)}.`)
+      const nameLintFuel = nameLintFuelsByPath[path]
+      if (nameLintFuel !== undefined) {
+        printError(`${highlight(pattern)} and ${highlight(nameLintFuel.pattern)} overlap at ${highlight(path)}.`)
         return null
       }
-      const pathParts = parsePath(path)
-      const nameRules = rulesByExtension[pathParts.extension]
-      if (nameRules !== undefined) {
-        nameLintMaterialsByPath[path] = {
-          pathParts,
-          pattern,
-          nameRules,
+      const smartFilename = parsePath(path)
+      for (const { name, extension } of smartFilename.nameExtensionCandidates) {
+        const nameRules = rulesByExtension[extension]
+        if (nameRules !== undefined) {
+          nameLintFuelsByPath[path] = {
+            pattern,
+            extension,
+            nameRules,
+            name,
+            filename: smartFilename.filename,
+          }
+          break
         }
       }
     }
   }
 
   if (overriding) {
-    const overridingNameLintMaterialsByPath = await getNameLintMaterialsByPath(basePath, overriding)
-    if (overridingNameLintMaterialsByPath === null) {
+    const overridingNameLintFuelsByPath = await getNameLintFuelsByPath(basePath, overriding)
+    if (overridingNameLintFuelsByPath === null) {
       return null
     }
 
-    for (const [overridingPath, overridingNameLintMaterial] of Object.entries(overridingNameLintMaterialsByPath)) {
-      if (nameLintMaterialsByPath[overridingPath]) {
-        nameLintMaterialsByPath[overridingPath] = overridingNameLintMaterial
+    for (const [overridingPath, overridingNameLintFuel] of Object.entries(overridingNameLintFuelsByPath)) {
+      const nameLintFuel = nameLintFuelsByPath[overridingPath]
+      if (nameLintFuel && nameLintFuel.extension === overridingNameLintFuel.extension) {
+        nameLintFuelsByPath[overridingPath] = overridingNameLintFuel
       }
     }
   }
 
-  return nameLintMaterialsByPath
+  return nameLintFuelsByPath
 }
 
-export default async function lint(basePath: string, nameLintConfig: NameLintConfig): Promise<boolean> {
+export default async function lintNames(basePath: string, nameLintConfig: NameLintConfig): Promise<boolean> {
   if (!validateNameLintConfig(nameLintConfig)) {
     return false
   }
-  const nameLintMaterialsByPath = await getNameLintMaterialsByPath(basePath, nameLintConfig)
-  if (nameLintMaterialsByPath === null) {
+  const nameLintFuelsByPath = await getNameLintFuelsByPath(basePath, nameLintConfig)
+  if (nameLintFuelsByPath === null) {
     return false
   }
   let hasLintPassed = true
-  for (const [path, nameLintMaterial] of Object.entries(nameLintMaterialsByPath)) {
-    const {
-      pattern,
-      pathParts: { filename, name },
-      nameRules,
-    } = nameLintMaterial
+  for (const [path, nameLintFuel] of Object.entries(nameLintFuelsByPath)) {
+    const { pattern, extension, nameRules, name, filename } = nameLintFuel
     if (!isNameLegal(name, nameRules)) {
       printError(
-        `${highlight(filename)} does not match ${highlight(nameRules)} at ${highlight(pattern)} (path: ${path}).`,
+        `${highlight(filename)} does not match ${highlight(`${extension}: ${toPrintable(nameRules)}`)} at ${highlight(
+          pattern,
+        )} (path: ${path}).`,
       )
       hasLintPassed = false
     }

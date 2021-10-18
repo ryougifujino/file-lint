@@ -1,2 +1,2 @@
 export { NC } from '@/nameValidators'
-export { default as lint } from '@/nameLinter'
+export { default as lintNames } from '@/nameLinter'
