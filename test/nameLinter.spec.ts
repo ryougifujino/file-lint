@@ -6,6 +6,7 @@ import { resolve } from 'path'
 const resolveTestFileTree = (relativePath: string) => resolve(__dirname, 'file-tree-cases', relativePath)
 const case1BasePath = resolveTestFileTree('case1')
 const case2BasePath = resolveTestFileTree('case2')
+const case3BasePath = resolveTestFileTree('case3')
 
 test('parsePath', () => {
   expect(parsePath('f')).toStrictEqual<SmartFilename>({
@@ -316,7 +317,7 @@ describe('getNameLintFuelsByPath', () => {
     ).toBe<NameLintFuelsByPath | null>(null)
   })
 
-  test('rules does not overlap(without overriding rules)', async () => {
+  test('rules do not overlap(without overriding rules)', async () => {
     expect(
       await getNameLintFuelsByPath(case1BasePath, {
         rules: {
@@ -633,6 +634,96 @@ describe('getNameLintFuelsByPath', () => {
         nameRules: NC.PASCAL_CASE,
         name: 'CircleLoading',
         filename: 'CircleLoading.tsx',
+      },
+    })
+  })
+
+  test('when lacking the exact extension matching, the sub-extension will hit', async () => {
+    expect(
+      await getNameLintFuelsByPath(case3BasePath, {
+        rules: {
+          '**': {
+            '.ts': NC.CAMEL_CASE,
+          },
+        },
+      }),
+    ).toStrictEqual<NameLintFuelsByPath | null>({
+      'core/browserEngine.ts': {
+        pattern: '**',
+        extension: '.ts',
+        nameRules: NC.CAMEL_CASE,
+        name: 'browserEngine',
+        filename: 'browserEngine.ts',
+      },
+      'core/browserEngine.d.ts': {
+        pattern: '**',
+        extension: '.ts',
+        nameRules: NC.CAMEL_CASE,
+        name: 'browserEngine.d',
+        filename: 'browserEngine.d.ts',
+      },
+    })
+  })
+
+  test('longest extension matching principle', async () => {
+    expect(
+      await getNameLintFuelsByPath(case3BasePath, {
+        rules: {
+          '**': {
+            '.ts': NC.CAMEL_CASE,
+            '.d.ts': NC.PASCAL_CASE,
+          },
+        },
+      }),
+    ).toStrictEqual<NameLintFuelsByPath | null>({
+      'core/browserEngine.ts': {
+        pattern: '**',
+        extension: '.ts',
+        nameRules: NC.CAMEL_CASE,
+        name: 'browserEngine',
+        filename: 'browserEngine.ts',
+      },
+      'core/browserEngine.d.ts': {
+        pattern: '**',
+        extension: '.d.ts',
+        nameRules: NC.PASCAL_CASE,
+        name: 'browserEngine',
+        filename: 'browserEngine.d.ts',
+      },
+    })
+  })
+
+  test('overriding rules will only override the rules with the same extension', async () => {
+    expect(
+      await getNameLintFuelsByPath(case3BasePath, {
+        rules: {
+          '**': {
+            '.ts': NC.CAMEL_CASE,
+            '.d.ts': NC.PASCAL_CASE,
+          },
+        },
+        overriding: {
+          rules: {
+            'core/**': {
+              '.ts': NC.SNAKE_CASE,
+            },
+          },
+        },
+      }),
+    ).toStrictEqual<NameLintFuelsByPath | null>({
+      'core/browserEngine.ts': {
+        pattern: 'core/**',
+        extension: '.ts',
+        nameRules: NC.SNAKE_CASE,
+        name: 'browserEngine',
+        filename: 'browserEngine.ts',
+      },
+      'core/browserEngine.d.ts': {
+        pattern: '**',
+        extension: '.d.ts',
+        nameRules: NC.PASCAL_CASE,
+        name: 'browserEngine',
+        filename: 'browserEngine.d.ts',
       },
     })
   })
