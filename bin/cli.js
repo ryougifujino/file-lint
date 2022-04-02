@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires,global-require,import/no-dynamic-require */
 
 const path = require('path')
-const { lint } = require('../dist/index')
+const { lintNames } = require('../dist/index')
 
 const cwd = process.cwd()
 
@@ -15,6 +15,6 @@ try {
   process.exit(1)
 }
 
-lint(cwd, config)
+lintNames(cwd, config)
   .then((ok) => (ok ? 0 : process.exit(1)))
   .catch(console.error)
